@@ -1,0 +1,1806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guidance Management System</title>
+  <meta name="description" content="A GitHub Pages-ready Guidance Management System prototype with QR services, incident reporting, Good Moral requests, review flow, printable certificates, and local storage.">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    :root{
+      --bg1:#0f172a;
+      --bg2:#111827;
+      --card:#ffffff;
+      --muted:#64748b;
+      --primary:#2563eb;
+      --primary2:#0ea5e9;
+      --success:#16a34a;
+      --warning:#f59e0b;
+      --danger:#dc2626;
+      --soft:#f8fafc;
+      --line:#e2e8f0;
+    }
+    *{box-sizing:border-box}
+    html,body{min-height:100%}
+    body{
+      margin:0;
+      font-family:Inter,Segoe UI,Arial,sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(37,99,235,.22), transparent 32%),
+        radial-gradient(circle at top right, rgba(14,165,233,.18), transparent 28%),
+        linear-gradient(135deg, #09111f, #0f172a 45%, #111827 100%);
+      color:#0f172a;
+    }
+    .hidden{display:none !important;}
+    .shell{min-height:100vh;}
+    .login-wrap{
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      padding:24px;
+    }
+    .login-card, .page-card, .metric, .glass, .panel, .certificate-card{
+      background:rgba(255,255,255,.96);
+      border:1px solid rgba(255,255,255,.25);
+      box-shadow:0 20px 45px rgba(0,0,0,.18);
+      border-radius:24px;
+    }
+    .login-card{max-width:1180px; overflow:hidden;}
+    .login-left{
+      color:white;
+      background:
+        linear-gradient(180deg, rgba(2,6,23,.1), rgba(2,6,23,.25)),
+        linear-gradient(135deg, #1d4ed8, #0ea5e9);
+      padding:34px;
+      min-height:100%;
+    }
+    .login-left .chip, .hero .chip{
+      display:inline-flex; align-items:center; gap:.5rem;
+      border-radius:999px; padding:.5rem .9rem; font-size:.85rem;
+      background:rgba(255,255,255,.15); color:#fff; backdrop-filter: blur(12px);
+    }
+    .login-right{padding:34px;}
+    .brand-mark{
+      width:62px;height:62px;border-radius:18px;
+      background:rgba(255,255,255,.16);
+      display:grid;place-items:center;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.2);
+    }
+    .muted{color:var(--muted)}
+    .soft-btn{
+      border:1px solid var(--line);
+      background:#fff;
+    }
+    .soft-btn:hover{background:#f8fafc}
+    .navbar{
+      background:rgba(15,23,42,.86) !important;
+      backdrop-filter: blur(14px);
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+    .page{
+      padding:22px 0 38px;
+    }
+    .page-card{overflow:hidden;}
+    .page-head{
+      padding:20px 22px;
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg,#fff,#f8fafc);
+    }
+    .page-body{padding:22px;}
+    .section-title{
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+    }
+    .section-title h5, .section-title h4{margin:0;font-weight:800;}
+    .metric{
+      padding:22px;
+      height:100%;
+      transition:.22s ease;
+    }
+    .metric:hover{transform:translateY(-4px)}
+    .metric .icon{
+      width:56px;height:56px;border-radius:18px;
+      display:grid;place-items:center;font-size:1.35rem;color:#fff;
+      background:linear-gradient(135deg, var(--primary), var(--primary2));
+    }
+    .kpi{
+      border-radius:20px;
+      padding:18px;
+      background:linear-gradient(135deg, #ffffff, #f8fbff);
+      border:1px solid var(--line);
+      box-shadow:0 12px 28px rgba(15,23,42,.06);
+    }
+    .kpi .num{font-size:2rem;font-weight:800;line-height:1}
+    .kpi .lbl{color:var(--muted);font-size:.95rem}
+    .chip{
+      display:inline-flex; align-items:center; gap:.4rem;
+      border-radius:999px; padding:.4rem .8rem;
+      background:#eef2ff; color:#1e3a8a; font-size:.84rem;
+    }
+    .hero{
+      color:white;
+      border-radius:28px;
+      padding:26px;
+      background:
+        linear-gradient(135deg, rgba(37,99,235,.92), rgba(14,165,233,.88)),
+        linear-gradient(135deg, #2563eb, #0ea5e9);
+      box-shadow:0 22px 50px rgba(15,23,42,.26);
+    }
+    .glass{
+      background:rgba(255,255,255,.88);
+      color:#0f172a;
+    }
+    .timeline{display:grid; gap:10px;}
+    .timeline-item{
+      display:flex; gap:10px; align-items:flex-start;
+      padding:12px 14px; border-radius:16px; background:rgba(255,255,255,.15);
+      border:1px solid rgba(255,255,255,.12); color:#fff;
+    }
+    .timeline-item .dot{
+      width:12px;height:12px;border-radius:999px; margin-top:6px; background:#fff;
+      box-shadow:0 0 0 5px rgba(255,255,255,.18);
+    }
+    .table thead th{background:#f8fafc}
+    .badge-soft{
+      background:#eef2ff; color:#1d4ed8; border:1px solid #dbeafe;
+    }
+    .badge-warning-soft{
+      background:#fff7ed; color:#c2410c; border:1px solid #fed7aa;
+    }
+    .badge-danger-soft{
+      background:#fef2f2; color:#b91c1c; border:1px solid #fecaca;
+    }
+    .badge-success-soft{
+      background:#ecfdf5; color:#047857; border:1px solid #a7f3d0;
+    }
+    .badge-secondary-soft{
+      background:#f1f5f9; color:#334155; border:1px solid #cbd5e1;
+    }
+    .nav-pills .nav-link{
+      border-radius:999px;
+      color:#334155;
+      background:#f8fafc;
+      border:1px solid var(--line);
+      margin-right:.4rem;
+    }
+    .nav-pills .nav-link.active{
+      background:linear-gradient(135deg, var(--primary), var(--primary2));
+      color:#fff;
+      border-color:transparent;
+    }
+    .form-control, .form-select{
+      border-radius:14px;
+      border-color:#cbd5e1;
+      padding:.75rem .95rem;
+    }
+    .form-control:focus, .form-select:focus{
+      border-color:var(--primary);
+      box-shadow:0 0 0 .2rem rgba(37,99,235,.14);
+    }
+    .btn{
+      border-radius:14px;
+      font-weight:600;
+    }
+    .btn-lg{border-radius:16px;}
+    .mini-help{color:var(--muted); font-size:.88rem}
+    .stepper{
+      display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px;
+    }
+    .step-pill{
+      display:flex; align-items:center; gap:10px;
+      padding:10px 14px; border-radius:999px;
+      background:#f8fafc; border:1px solid var(--line); color:#334155;
+      font-weight:600;
+    }
+    .step-pill.active{
+      background:linear-gradient(135deg, #1d4ed8, #0ea5e9);
+      color:#fff;
+      border-color:transparent;
+    }
+    .step-pill.done{
+      background:#ecfdf5; color:#047857; border-color:#a7f3d0;
+    }
+    .wizard-panel{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:18px;
+    }
+    .rule-card{
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:16px;
+      background:#fff;
+      margin-bottom:14px;
+    }
+    .rule-card .small{color:var(--muted)}
+    .notification-list{
+      max-height:360px;
+      overflow:auto;
+    }
+    .notification-item{
+      border:1px solid var(--line);
+      background:#fff;
+      border-radius:18px;
+      padding:14px 16px;
+      margin-bottom:10px;
+    }
+    .notification-item.unread{background:#eff6ff}
+    .certificate-card{
+      width:min(860px, 100%);
+      margin:0 auto;
+      padding:34px;
+      border:8px solid #1e3a8a;
+      background:
+        linear-gradient(180deg,#fff,#f8fbff);
+      text-align:center;
+    }
+    .certificate-card h1{font-weight:900; letter-spacing:1px}
+    .certificate-sign{
+      border-top:1px solid #cbd5e1;
+      margin-top:52px;
+      padding-top:10px;
+      min-width:220px;
+    }
+    .qr-box{
+      width:176px;height:176px; border:1px solid var(--line);
+      border-radius:18px; display:grid; place-items:center;
+      background:#fff;
+      margin:0 auto;
+    }
+    .small-stack{display:grid; gap:6px}
+    .toast-container{z-index:3000}
+    .action-col button{margin-right:6px; margin-bottom:6px}
+    .table-responsive{border-radius:18px; overflow:hidden}
+    .empty-state{
+      background:#fff; border:1px dashed #cbd5e1; border-radius:18px; padding:26px; text-align:center; color:var(--muted);
+    }
+    .modal-content{border-radius:24px}
+    #printArea{display:none}
+    @media print{
+      body *{visibility:hidden !important;}
+      #printArea, #printArea *{visibility:visible !important;}
+      #printArea{display:block !important; position:fixed; inset:0; background:#fff; padding:18px;}
+    }
+    @media (max-width: 992px){
+      .login-left{border-radius:24px 24px 0 0}
+      .login-right{padding:24px}
+    }
+  </style>
+</head>
+<body>
+  <div id="loginView" class="login-wrap">
+    <div class="login-card container-fluid p-0">
+      <div class="row g-0">
+        <div class="col-lg-6 login-left">
+          <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="brand-mark"><i class="fa-solid fa-shield-heart fa-2x"></i></div>
+            <div>
+              <div class="chip mb-2"><i class="fa-solid fa-qrcode"></i> QR-based Guidance System</div>
+              <h1 class="fw-black mb-1">Guidance Management System</h1>
+              <p class="mb-0 opacity-75">Incident reports, Good Moral requests, review flow, printable certificates, and notifications in one portal.</p>
+            </div>
+          </div>
+          <div class="hero">
+            <h3 class="fw-bold mb-3">System flow</h3>
+            <div class="timeline">
+              <div class="timeline-item"><div class="dot"></div><div><strong>1. Login by username and password</strong><div class="small opacity-75">No role selection needed.</div></div></div>
+              <div class="timeline-item"><div class="dot"></div><div><strong>2. Students only see Student Services</strong><div class="small opacity-75">Incident report and Good Moral request.</div></div></div>
+              <div class="timeline-item"><div class="dot"></div><div><strong>3. Conduct Code and LFO intake sheet</strong><div class="small opacity-75">Next button is locked until required fields are complete.</div></div></div>
+              <div class="timeline-item"><div class="dot"></div><div><strong>4. Department heads review requests</strong><div class="small opacity-75">They may approve now or set a 2-day waiting period.</div></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6 login-right">
+          <div class="mb-4">
+            <h3 class="fw-bold mb-2">Sign in</h3>
+            <p class="muted mb-0">Enter your username and password to continue.</p>
+          </div>
+          <form id="loginForm" class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Username</label>
+              <input id="loginUsername" class="form-control" placeholder="e.g. student01" autocomplete="username" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Password</label>
+              <input id="loginPassword" type="password" class="form-control" placeholder="Enter password" autocomplete="current-password" required>
+            </div>
+            <div class="col-12 d-grid">
+              <button class="btn btn-primary btn-lg"><i class="fa-solid fa-right-to-bracket me-2"></i>Login</button>
+            </div>
+          </form>
+          <div class="mt-4">
+            <div class="small text-secondary mb-2">Demo accounts</div>
+            <div class="small-stack">
+              <span><strong>student01</strong> / student123</span>
+              <span><strong>teacher01</strong> / teacher123</span>
+              <span><strong>counselor01</strong> / counselor123</span>
+              <span><strong>principal01</strong> / principal123</span>
+              <span><strong>admin01</strong> / admin123</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="appView" class="shell hidden">
+    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm">
+      <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="#"><i class="fa-solid fa-shield-heart me-2"></i>Guidance Management</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navContent">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0" id="navList"></ul>
+          <div class="d-flex align-items-center gap-2 text-white">
+            <span class="chip bg-white text-dark" id="userBadge">Guest</span>
+            <button class="btn btn-outline-light btn-sm" id="markAllReadBtn"><i class="fa-regular fa-bell me-1"></i>Mark all read</button>
+            <button class="btn btn-outline-light btn-sm" id="logoutBtn"><i class="fa-solid fa-arrow-right-from-bracket me-1"></i>Logout</button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container py-4">
+      <section id="dashboardPage" class="page">
+        <div class="hero mb-4">
+          <div class="row align-items-center g-4">
+            <div class="col-lg-8">
+              <div class="chip mb-3"><i class="fa-solid fa-circle-nodes"></i> Secure, QR-ready, single-file prototype</div>
+              <h2 class="display-6 fw-bold mb-2">School Guidance System</h2>
+              <p class="lead mb-3 opacity-75">Students file incident reports or request Good Moral certificates. Department heads review, approve, and print certificates with local storage and notifications.</p>
+              <div class="d-flex flex-wrap gap-2">
+                <button class="btn btn-light btn-lg" data-jump="studentServicePage"><i class="fa-solid fa-clipboard-list me-2"></i>Open Student Services</button>
+                <button class="btn btn-outline-light btn-lg" data-jump="reportsPage"><i class="fa-solid fa-chart-column me-2"></i>Analytics</button>
+                <button class="btn btn-outline-light btn-lg" data-jump="qrPage"><i class="fa-solid fa-qrcode me-2"></i>QR Codes</button>
+              </div>
+            </div>
+            <div class="col-lg-4">
+              <div class="glass rounded-5 p-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <strong>Live queue</strong><span class="chip bg-white text-dark" id="liveQueueChip">0 pending</span>
+                </div>
+                <div class="small text-secondary mb-3">Workflow status</div>
+                <div class="timeline">
+                  <div class="timeline-item"><div class="dot"></div><div><strong>Student submits</strong><div class="small opacity-75">Incident / Good Moral form</div></div></div>
+                  <div class="timeline-item"><div class="dot"></div><div><strong>Staff reviews</strong><div class="small opacity-75">Teacher, counselor, principal</div></div></div>
+                  <div class="timeline-item"><div class="dot"></div><div><strong>Print / resolve</strong><div class="small opacity-75">Certificate becomes printable when ready</div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-4" id="kpiRow"></div>
+
+        <div class="page-card mb-4">
+          <div class="page-head">
+            <div class="section-title">
+              <div>
+                <h5>Latest activity</h5>
+                <div class="mini-help">Recent incident reports, Good Moral requests, and notifications.</div>
+              </div>
+              <button class="btn btn-outline-secondary soft-btn btn-sm" data-jump="notificationsPage"><i class="fa-regular fa-bell me-1"></i>Open notifications</button>
+            </div>
+          </div>
+          <div class="page-body">
+            <div id="activityFeed" class="row g-3"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="studentServicePage" class="page hidden">
+        <div class="page-card">
+          <div class="page-head">
+            <div class="section-title">
+              <div>
+                <h5>Student Services</h5>
+                <div class="mini-help">Students only see these options on the first page.</div>
+              </div>
+              <button class="btn btn-outline-secondary soft-btn btn-sm" data-back="dashboardPage"><i class="fa-solid fa-arrow-left me-1"></i>Back</button>
+            </div>
+          </div>
+          <div class="page-body">
+            <div class="row g-3">
+              <div class="col-lg-6">
+                <div class="metric h-100">
+                  <div class="icon mb-3"><i class="fa-solid fa-file-signature"></i></div>
+                  <h4 class="fw-bold">File Incident Report</h4>
+                  <p class="muted mb-3">Use the guided form. Required fields must be completed before moving to the next step.</p>
+                  <button class="btn btn-primary rounded-4" data-open="incidentWizard"><i class="fa-solid fa-pen-to-square me-2"></i>Open Incident Form</button>
+                </div>
+              </div>
+              <div class="col-lg-6">
+                <div class="metric h-100">
+                  <div class="icon mb-3"><i class="fa-solid fa-certificate"></i></div>
+                  <h4 class="fw-bold">Request Good Moral</h4>
+                  <p class="muted mb-3">After submission, the student receives a notice telling them to wait 2 days unless a department head approves it earlier.</p>
+                  <button class="btn btn-success rounded-4" data-open="goodMoralForm"><i class="fa-solid fa-paper-plane me-2"></i>Request Now</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="conductPage" class="page hidden">
+        <div class="page-card">
+          <div class="page-head">
+            <div class="section-title">
+              <div>
+                <h5>Learner’s Code of Conduct</h5>
+                <div class="mini-help">The conduct list is shown during the incident wizard and also here for quick reference.</div>
+              </div>
+              <button class="btn btn-outline-secondary soft-btn btn-sm" data-back="dashboardPage"><i class="fa-solid fa-arrow-left me-1"></i>Back</button>
+            </div>
+          </div>
+          <div class="page-body">
+            <div class="row g-4">
+              <div class="col-lg-6">
+                <div class="rule-card">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="mb-0">Minor offenses</h5><span class="badge badge-soft">24 items</span>
+                  </div>
+                  <div id="minorRules"></div>
+                </div>
+              </div>
+              <div class="col-lg-6">
+                <div class="rule-card">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="mb-0">Serious offenses</h5><span class="badge badge-danger-soft">20 items</span>
+                  </div>
+                  <div id="seriousRules"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="reportsPage" class="page hidden">
+        <div class="page-card">
+          <div class="page-head">
+            <div class="section-title">
+              <div>
+                <h5>Analytics</h5>
+                <div class="mini-help">A quick view of incidents and Good Moral request statuses.</div>
+              </div>
+              <button class="btn btn-outline-secondary soft-btn btn-sm" data-back="dashboardPage"><i class="fa-solid fa-arrow-left me-1"></i>Back</button>
+            </div>
+          </div>
+          <div class="page-body">
+            <div class="row g-3 mb-4" id="reportsKpis"></div>
+            <div class="row g-4">
+              <div class="col-lg-7">
+                <div class="panel p-3 h-100">
+                  <h5 class="fw-bold mb-3">Status distribution</h5>
+                  <canvas id="statusChart" height="160"></canvas>
+                </div>
+              </div>
+              <div class="col-lg-5">
+                <div class="panel p-3 h-100">
+                  <h5 class="fw-bold mb-3">Queue snapshot</h5>
+                  <div id="queueSnapshot"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="notificationsPage" class="page hidden">
+        <div class="page-card">
+          <div class="page-head">
+            <div class="section-title">
+              <div>
+                <h5>Notifications</h5>
+                <div class="mini-help">All notices sent to the signed-in account.</div>
+              </div>
+              <button class="btn btn-outline-secondary soft-btn btn-sm" data-back="dashboardPage"><i class="fa-solid fa-arrow-left me-1"></i>Back</button>
+            </div>
+          </div>
+          <div class="page-body">
+            <div id="notificationsList" class="notification-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="staffPage" class="page hidden">
+        <div class="page-card">
+          <div class="page-head">
+            <div class="section-title">
+              <div>
+                <h5>Department Review Queue</h5>
+                <div class="mini-help">Teacher, guidance counselor, principal, and admin can review submissions here.</div>
+              </div>
+              <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-outline-secondary soft-btn btn-sm" data-staff-filter="all">All</button>
+                <button class="btn btn-outline-primary soft-btn btn-sm" data-staff-filter="incident">Incidents</button>
+                <button class="btn btn-outline-success soft-btn btn-sm" data-staff-filter="goodmoral">Good Moral</button>
+              </div>
+            </div>
+          </div>
+          <div class="page-body">
+            <div class="table-responsive">
+              <table class="table align-middle">
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th>Student</th>
+                    <th>Section</th>
+                    <th>Status</th>
+                    <th>Submitted</th>
+                    <th class="text-end">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="staffQueueBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="qrPage" class="page hidden">
+        <div class="page-card">
+          <div class="page-head">
+            <div class="section-title">
+              <div>
+                <h5>QR Entry Points</h5>
+                <div class="mini-help">These QR codes can open the student services directly.</div>
+              </div>
+              <button class="btn btn-outline-secondary soft-btn btn-sm" data-back="dashboardPage"><i class="fa-solid fa-arrow-left me-1"></i>Back</button>
+            </div>
+          </div>
+          <div class="page-body">
+            <div class="row g-4">
+              <div class="col-md-6">
+                <div class="metric text-center">
+                  <h5 class="fw-bold mb-3">Incident report QR</h5>
+                  <div class="qr-box mb-3"><div id="incidentQr"></div></div>
+                  <button class="btn btn-outline-primary soft-btn btn-sm" data-copy-link="incident"><i class="fa-solid fa-link me-1"></i>Copy link</button>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="metric text-center">
+                  <h5 class="fw-bold mb-3">Good Moral QR</h5>
+                  <div class="qr-box mb-3"><div id="goodMoralQr"></div></div>
+                  <button class="btn btn-outline-success soft-btn btn-sm" data-copy-link="goodmoral"><i class="fa-solid fa-link me-1"></i>Copy link</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal fade" id="goodMoralModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div>
+            <h5 class="modal-title mb-0">Request Good Moral Certificate</h5>
+            <div class="mini-help">A department head may approve it now or set a waiting period.</div>
+          </div>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-info rounded-4">After submission, the student receives a notice. If no one approves it earlier, the default waiting period is <strong>2 days</strong>.</div>
+          <form id="goodMoralForm" class="row g-3">
+            <div class="col-md-6"><label class="form-label">Student Name</label><input id="gmName" class="form-control" required></div>
+            <div class="col-md-6"><label class="form-label">LRN</label><input id="gmLrn" class="form-control" required></div>
+            <div class="col-md-6"><label class="form-label">Grade / Section</label><input id="gmSection" class="form-control" required></div>
+            <div class="col-md-6"><label class="form-label">Purpose</label><input id="gmPurpose" class="form-control" placeholder="Scholarship, employment, enrollment..." required></div>
+            <div class="col-12"><label class="form-label">Reason / Notes</label><textarea id="gmNotes" class="form-control" rows="3" required></textarea></div>
+            <div class="col-12 d-grid"><button class="btn btn-success btn-lg"><i class="fa-solid fa-paper-plane me-2"></i>Submit Request</button></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="incidentWizard" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div>
+            <h5 class="modal-title mb-0">Incident Report Wizard</h5>
+            <div class="mini-help">Stage 1 must be complete before Next is enabled.</div>
+          </div>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="stepper">
+            <div class="step-pill active" id="wizStep1"><span class="badge rounded-pill text-bg-primary">1</span>Incident details</div>
+            <div class="step-pill" id="wizStep2"><span class="badge rounded-pill text-bg-secondary">2</span>Code of conduct</div>
+            <div class="step-pill" id="wizStep3"><span class="badge rounded-pill text-bg-secondary">3</span>LFO intake sheet</div>
+          </div>
+          <form id="incidentForm">
+            <div id="wizardStage1" class="wizard-panel mb-3">
+              <div class="section-title mb-3">
+                <div>
+                  <h5 class="mb-1">Incident report</h5>
+                  <div class="mini-help">You may enter only the section if you do not want to name the student involved.</div>
+                </div>
+              </div>
+              <div class="row g-3">
+                <div class="col-md-4"><label class="form-label">Date</label><input id="irDate" type="date" class="form-control" required></div>
+                <div class="col-md-4"><label class="form-label">Time</label><input id="irTime" type="time" class="form-control" required></div>
+                <div class="col-md-4"><label class="form-label">Location</label><input id="irLocation" class="form-control" required></div>
+                <div class="col-md-6"><label class="form-label">Reported by</label><input id="irReporter" class="form-control" required></div>
+                <div class="col-md-6"><label class="form-label">Reporter role</label>
+                  <select id="irReporterRole" class="form-select" required>
+                    <option value="">Select</option>
+                    <option>Student</option><option>Teacher</option><option>Guidance Counselor</option><option>School Personnel</option><option>Parent / Guardian</option>
+                  </select>
+                </div>
+                <div class="col-md-6"><label class="form-label">Student name (optional)</label><input id="irStudentName" class="form-control" placeholder="Optional"></div>
+                <div class="col-md-6"><label class="form-label">Section</label><input id="irSection" class="form-control" placeholder="Section only is allowed" required></div>
+                <div class="col-12">
+                  <label class="form-label">Incident type(s)</label>
+                  <div class="row g-2" id="incidentTypeChecks"></div>
+                </div>
+                <div class="col-12"><label class="form-label">Summary</label><textarea id="irSummary" class="form-control" rows="4" required></textarea></div>
+                <div class="col-md-6"><label class="form-label">Witnesses / notes</label><input id="irWitness" class="form-control" placeholder="Optional"></div>
+                <div class="col-md-6"><label class="form-label">Guardian notified?</label>
+                  <select id="irGuardianNotified" class="form-select">
+                    <option>Not yet</option>
+                    <option>Yes</option>
+                    <option>No</option>
+                  </select>
+                </div>
+              </div>
+              <div class="d-flex justify-content-end mt-3">
+                <button type="button" class="btn btn-primary" id="toStep2Btn" disabled>Next <i class="fa-solid fa-arrow-right ms-2"></i></button>
+              </div>
+            </div>
+
+            <div id="wizardStage2" class="wizard-panel mb-3 hidden">
+              <div class="section-title mb-3">
+                <div>
+                  <h5 class="mb-1">Learner’s Code of Conduct</h5>
+                  <div class="mini-help">Select the offense that best matches the report.</div>
+                </div>
+                <button type="button" class="btn btn-outline-secondary soft-btn btn-sm" id="previewConductBtn"><i class="fa-regular fa-eye me-1"></i>Preview</button>
+              </div>
+              <div class="row g-3 mb-3">
+                <div class="col-md-5">
+                  <label class="form-label">Category</label>
+                  <select id="conductCategory" class="form-select">
+                    <option value="all">All offenses</option>
+                    <option value="minor">Minor offenses</option>
+                    <option value="serious">Serious offenses</option>
+                  </select>
+                </div>
+                <div class="col-md-7">
+                  <label class="form-label">Search</label>
+                  <input id="conductSearch" class="form-control" placeholder="Search offense...">
+                </div>
+              </div>
+              <div id="conductList" class="row g-3"></div>
+              <input type="hidden" id="selectedConduct">
+              <div class="d-flex justify-content-between mt-3">
+                <button type="button" class="btn btn-outline-secondary soft-btn" id="backStep1Btn"><i class="fa-solid fa-arrow-left me-1"></i>Back</button>
+                <button type="button" class="btn btn-primary" id="toStep3Btn" disabled>Next <i class="fa-solid fa-arrow-right ms-2"></i></button>
+              </div>
+            </div>
+
+            <div id="wizardStage3" class="wizard-panel hidden">
+              <div class="section-title mb-3">
+                <div>
+                  <h5 class="mb-1">Learner Formation Office Intake Sheet</h5>
+                  <div class="mini-help">Complete the intake sheet before final submission.</div>
+                </div>
+              </div>
+              <div class="row g-3">
+                <div class="col-md-4"><label class="form-label">Date submitted</label><input id="lfoDate" type="date" class="form-control" required></div>
+                <div class="col-md-4"><label class="form-label">Case number</label><input id="lfoCaseNo" class="form-control" required></div>
+                <div class="col-md-4"><label class="form-label">Immediate action</label><input id="irImmediateAction" class="form-control" placeholder="Temporary action, referral..." required></div>
+                <div class="col-md-6"><label class="form-label">Handled by</label><input id="irActionBy" class="form-control" placeholder="Name of staff / counselor" required></div>
+                <div class="col-md-6"><label class="form-label">Documents attached</label><input id="irDocs" class="form-control" placeholder="Incident report, witness statement, etc."></div>
+                <div class="col-12"><label class="form-label">Action notes</label><textarea id="irActionNotes" class="form-control" rows="4" required></textarea></div>
+              </div>
+              <div class="d-flex justify-content-between mt-3">
+                <button type="button" class="btn btn-outline-secondary soft-btn" id="backStep2Btn"><i class="fa-solid fa-arrow-left me-1"></i>Back</button>
+                <button class="btn btn-primary"><i class="fa-solid fa-paper-plane me-2"></i>Submit Incident</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="reviewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div>
+            <h5 class="modal-title mb-0">Review Submission</h5>
+            <div class="mini-help">Department heads can approve now or set a waiting period.</div>
+          </div>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="reviewBody"></div>
+          <div class="mt-3">
+            <label class="form-label">Staff notes</label>
+            <textarea id="reviewNotes" class="form-control" rows="4" placeholder="Add approval/rejection notes..."></textarea>
+          </div>
+          <div id="goodMoralReviewOptions" class="mt-3 hidden">
+            <label class="form-label">Approval timing</label>
+            <div class="d-flex flex-wrap gap-2">
+              <input type="radio" class="btn-check" name="gmTiming" id="gmNow" value="0" checked>
+              <label class="btn btn-outline-success soft-btn" for="gmNow">Approve now</label>
+              <input type="radio" class="btn-check" name="gmTiming" id="gm2Days" value="2">
+              <label class="btn btn-outline-primary soft-btn" for="gm2Days">Wait 2 days</label>
+              <input type="radio" class="btn-check" name="gmTiming" id="gmCustom" value="custom">
+              <label class="btn btn-outline-secondary soft-btn" for="gmCustom">Custom days</label>
+              <input id="gmCustomDays" type="number" class="form-control" min="0" max="30" value="2" style="max-width:130px;">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer d-flex justify-content-between flex-wrap gap-2">
+          <div class="d-flex gap-2 flex-wrap">
+            <button class="btn btn-success" id="approveBtn"><i class="fa-solid fa-check me-1"></i>Approve</button>
+            <button class="btn btn-danger" id="rejectBtn"><i class="fa-solid fa-xmark me-1"></i>Reject</button>
+          </div>
+          <button class="btn btn-outline-secondary soft-btn" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="certificateModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div>
+            <h5 class="modal-title mb-0">Printable Good Moral Certificate</h5>
+            <div class="mini-help">Ready for printing when a request is approved.</div>
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary soft-btn" id="printCertificateBtn"><i class="fa-solid fa-print me-1"></i>Print</button>
+            <button class="btn-close ms-2" data-bs-dismiss="modal"></button>
+          </div>
+        </div>
+        <div class="modal-body bg-light">
+          <div id="certificatePreview"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="printArea"></div>
+  <div class="toast-container position-fixed top-0 end-0 p-3" id="toastArea"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    const STORAGE_KEY = 'gms_state_v4';
+    const SESSION_KEY = 'gms_session_v4';
+
+    const conductRules = {
+      minor: [
+        "Not giving letter to parents",
+        "Wearing of cap inside school building",
+        "Wearing of earrings for boys / multiple for girls",
+        "Using profane language to insult another",
+        "Littering inside school campus",
+        "Loitering during class hour",
+        "Using gadgets during class hour",
+        "Public display of affection (PDA)",
+        "Unruly behavior during assemblies",
+        "Going to restricted places",
+        "Refusal to display school ID",
+        "Sitting on tables or standing on benches improperly",
+        "Writing on fellow student's books",
+        "Borrowing without returning",
+        "Spending entrusted funds for personal use",
+        "Refusing to obey student leader",
+        "Pulling chair away when someone is about to sit",
+        "Hiding another's property",
+        "Jumping over the fence",
+        "Spitting elsewhere",
+        "Chewing gum during class hour",
+        "Putting on make-up during class hour",
+        "Urinating in inappropriate places",
+        "Excessive noise in corridors"
+      ],
+      serious: [
+        "Cheating and stealing",
+        "Assaulting a teacher or school authority",
+        "Smoking inside school premises",
+        "Vandalism or destroying school property",
+        "Gambling of any sort",
+        "Drinking intoxicants and liquor",
+        "Carrying and concealing deadly weapons",
+        "Extortion or asking money from others",
+        "Fighting causing injury to others",
+        "Using, possessing, or selling prohibited drugs",
+        "Hazing in any form",
+        "Immorality or sexual harassment",
+        "Patronizing suspected prostitution or gambling places",
+        "Instigating activities causing class stoppage",
+        "Preventing or threatening school personnel or students",
+        "Forging or tampering with school records",
+        "Bullying (physical, emotional, mental or cyber)",
+        "Absenteeism, cutting classes or tardiness",
+        "Selling stolen goods in school",
+        "Disrespecting the national flag or anthem"
+      ]
+    };
+
+    const users = [
+      { username:'student01', password:'student123', role:'student', name:'Student Demo', section:'11-ICT A', lrn:'123456789012' },
+      { username:'teacher01', password:'teacher123', role:'teacher', name:'Teacher Demo' },
+      { username:'counselor01', password:'counselor123', role:'counselor', name:'Guidance Counselor' },
+      { username:'principal01', password:'principal123', role:'principal', name:'Principal Office' },
+      { username:'admin01', password:'admin123', role:'admin', name:'Administrator' }
+    ];
+
+    const navItems = {
+      student: [
+        { page:'dashboardPage', label:'Dashboard' },
+        { page:'studentServicePage', label:'Student Services' },
+        { page:'conductPage', label:'Code of Conduct' },
+        { page:'qrPage', label:'QR Codes' },
+        { page:'notificationsPage', label:'Notifications' }
+      ],
+      teacher: [
+        { page:'dashboardPage', label:'Dashboard' },
+        { page:'staffPage', label:'Review Queue' },
+        { page:'conductPage', label:'Code of Conduct' },
+        { page:'reportsPage', label:'Analytics' },
+        { page:'notificationsPage', label:'Notifications' }
+      ],
+      counselor: [
+        { page:'dashboardPage', label:'Dashboard' },
+        { page:'staffPage', label:'Review Queue' },
+        { page:'conductPage', label:'Code of Conduct' },
+        { page:'reportsPage', label:'Analytics' },
+        { page:'notificationsPage', label:'Notifications' }
+      ],
+      principal: [
+        { page:'dashboardPage', label:'Dashboard' },
+        { page:'staffPage', label:'Review Queue' },
+        { page:'conductPage', label:'Code of Conduct' },
+        { page:'reportsPage', label:'Analytics' },
+        { page:'qrPage', label:'QR Codes' }
+      ],
+      admin: [
+        { page:'dashboardPage', label:'Dashboard' },
+        { page:'staffPage', label:'Review Queue' },
+        { page:'studentServicePage', label:'Student Services' },
+        { page:'conductPage', label:'Code of Conduct' },
+        { page:'reportsPage', label:'Analytics' },
+        { page:'qrPage', label:'QR Codes' },
+        { page:'notificationsPage', label:'Notifications' }
+      ]
+    };
+
+    const roleTitles = {
+      student: 'Student Portal',
+      teacher: 'Teacher Review',
+      counselor: 'Guidance Counselor',
+      principal: 'Principal',
+      admin: 'Administrator'
+    };
+
+    let db = loadDB();
+    let currentUser = null;
+    let currentPage = 'dashboardPage';
+    let currentReview = null;
+    let chart = null;
+    let currentFilter = 'all';
+    let selectedConduct = '';
+
+    function uid(){
+      return 'ID-' + Math.random().toString(36).slice(2, 10).toUpperCase() + Date.now().toString(36).toUpperCase();
+    }
+
+    function escapeHtml(value){
+      return String(value ?? '').replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+    }
+
+    function formatDateTime(iso){
+      if(!iso) return '—';
+      const d = new Date(iso);
+      return isNaN(d) ? '—' : d.toLocaleString();
+    }
+
+    function formatDate(iso){
+      if(!iso) return '—';
+      const d = new Date(iso);
+      return isNaN(d) ? '—' : d.toLocaleDateString();
+    }
+
+    function statusBadge(status){
+      const map = {
+        pending:'badge-warning-soft',
+        reviewed:'badge-soft',
+        approved:'badge-success-soft',
+        rejected:'badge-danger-soft',
+        ready:'badge-success-soft',
+        waiting:'badge-warning-soft',
+        resolved:'badge-success-soft'
+      };
+      return map[status] || 'badge-secondary-soft';
+    }
+
+    function statusLabel(status){
+      return String(status || '—').replaceAll('_', ' ');
+    }
+
+    function defaultDB(){
+      return {
+        students: [
+          { username:'student01', name:'Student Demo', section:'11-ICT A', lrn:'123456789012', qrToken:'STU-001' }
+        ],
+        incidentReports: [],
+        goodMoralRequests: [],
+        notifications: [
+          {
+            id: uid(),
+            user:'student01',
+            title:'Welcome',
+            message:'The system is ready. Submit an incident report or request a Good Moral certificate.',
+            read:false,
+            createdAt: new Date().toISOString()
+          }
+        ],
+        auditLogs: []
+      };
+    }
+
+    function loadDB(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(!raw) return defaultDB();
+        const parsed = JSON.parse(raw);
+        return {
+          students: Array.isArray(parsed.students) ? parsed.students : defaultDB().students,
+          incidentReports: Array.isArray(parsed.incidentReports) ? parsed.incidentReports : [],
+          goodMoralRequests: Array.isArray(parsed.goodMoralRequests) ? parsed.goodMoralRequests : [],
+          notifications: Array.isArray(parsed.notifications) ? parsed.notifications : [],
+          auditLogs: Array.isArray(parsed.auditLogs) ? parsed.auditLogs : []
+        };
+      }catch(e){
+        return defaultDB();
+      }
+    }
+
+    function saveDB(){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+    }
+
+    function addAudit(action, details){
+      db.auditLogs.unshift({
+        id: uid(),
+        action,
+        details,
+        user: currentUser ? currentUser.username : 'system',
+        createdAt: new Date().toISOString()
+      });
+      db.auditLogs = db.auditLogs.slice(0, 40);
+    }
+
+    function notify(user, title, message){
+      db.notifications.unshift({
+        id: uid(),
+        user,
+        title,
+        message,
+        read:false,
+        createdAt: new Date().toISOString()
+      });
+    }
+
+    function toast(title, message, kind='primary'){
+      const area = document.getElementById('toastArea');
+      const node = document.createElement('div');
+      node.className = `toast align-items-center text-bg-${kind} border-0`;
+      node.innerHTML = `
+        <div class="d-flex">
+          <div class="toast-body"><strong>${escapeHtml(title)}</strong><div>${escapeHtml(message)}</div></div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>`;
+      area.appendChild(node);
+      const t = new bootstrap.Toast(node, { delay: 3200 });
+      t.show();
+      node.addEventListener('hidden.bs.toast', () => node.remove());
+    }
+
+    function currentStudent(){
+      const base = users.find(u => u.username === 'student01');
+      return {
+        username: base.username,
+        name: base.name,
+        section: base.section,
+        lrn: base.lrn
+      };
+    }
+
+    function getSession(){
+      try{
+        const raw = sessionStorage.getItem(SESSION_KEY);
+        return raw ? JSON.parse(raw) : null;
+      }catch(e){ return null; }
+    }
+
+    function setSession(user){
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
+    }
+
+    function clearSession(){
+      sessionStorage.removeItem(SESSION_KEY);
+    }
+
+    function seedStudentRecord(){
+      const stu = currentStudent();
+      if(!db.students.find(s => s.username === stu.username)){
+        db.students.push({ ...stu, qrToken:'STU-001' });
+      }
+    }
+
+    function syncGoodMoralReadyState(){
+      const now = Date.now();
+      db.goodMoralRequests.forEach(req => {
+        if(req.status === 'waiting' && req.readyAt && now >= new Date(req.readyAt).getTime()){
+          req.status = 'ready';
+          notify(req.studentUser, 'Good Moral ready', 'Your certificate is now ready for printing.');
+          addAudit('Good Moral auto-ready', `${req.id} reached its ready date.`);
+        }
+      });
+    }
+
+    function login(user){
+      currentUser = user;
+      setSession(user);
+      document.getElementById('loginView').classList.add('hidden');
+      document.getElementById('appView').classList.remove('hidden');
+      document.getElementById('userBadge').textContent = `${user.name} · ${roleTitles[user.role]}`;
+      buildNav();
+      showPage('dashboardPage');
+      renderAll();
+      toast('Login successful', `Welcome ${user.name}!`, 'success');
+    }
+
+    function logout(){
+      clearSession();
+      currentUser = null;
+      document.getElementById('appView').classList.add('hidden');
+      document.getElementById('loginView').classList.remove('hidden');
+      document.getElementById('loginForm').reset();
+      toast('Logged out', 'You have been signed out.', 'success');
+    }
+
+    function buildNav(){
+      const list = document.getElementById('navList');
+      const items = navItems[currentUser.role] || navItems.student;
+      list.innerHTML = items.map(i => `<li class="nav-item"><a class="nav-link" href="#" data-page="${i.page}">${escapeHtml(i.label)}</a></li>`).join('');
+      list.querySelectorAll('.nav-link')[0]?.classList.add('active');
+    }
+
+    function showPage(id){
+      currentPage = id;
+      document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+      const page = document.getElementById(id);
+      if(page) page.classList.remove('hidden');
+      document.querySelectorAll('#navList .nav-link').forEach(a => a.classList.toggle('active', a.dataset.page === id));
+      renderAll();
+    }
+
+    function openModal(id){
+      return bootstrap.Modal.getOrCreateInstance(document.getElementById(id));
+    }
+
+    function openGoodMoralModal(){
+      const stu = currentStudent();
+      document.getElementById('gmName').value = stu.name;
+      document.getElementById('gmLrn').value = stu.lrn;
+      document.getElementById('gmSection').value = stu.section;
+      openModal('goodMoralModal').show();
+    }
+
+    function openIncidentWizard(){
+      selectedConduct = '';
+      document.getElementById('incidentForm').reset();
+      document.getElementById('selectedConduct').value = '';
+      document.getElementById('irDate').valueAsDate = new Date();
+      const time = new Date();
+      document.getElementById('irTime').value = time.toTimeString().slice(0,5);
+      document.getElementById('lfoDate').valueAsDate = new Date();
+      document.getElementById('lfoCaseNo').value = `CASE-${new Date().getFullYear()}-${String(db.incidentReports.length + 1).padStart(4, '0')}`;
+      renderIncidentChecks();
+      currentStage = 1;
+      syncWizard();
+      renderConductList();
+      validateStep1();
+      validateStep2();
+      openModal('incidentWizard').show();
+    }
+
+    function renderIncidentChecks(){
+      const wrap = document.getElementById('incidentTypeChecks');
+      const types = [
+        "Physical Altercation",
+        "Property Damage or Theft",
+        "Accident or Injury",
+        "Medical Emergency",
+        "Verbal Threat or Bullying",
+        "Inappropriate Behavior",
+        "Violation of School Policy",
+        "Other"
+      ];
+      wrap.innerHTML = types.map((t, i) => `
+        <div class="col-md-6">
+          <div class="form-check">
+            <input class="form-check-input incident-type" type="checkbox" value="${escapeHtml(t)}" id="it${i}">
+            <label class="form-check-label" for="it${i}">${escapeHtml(t)}</label>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderConductList(){
+      const search = (document.getElementById('conductSearch').value || '').toLowerCase();
+      const category = document.getElementById('conductCategory').value || 'all';
+      const container = document.getElementById('conductList');
+
+      const pick = (rule, key) => (category === 'all' || category === key) && rule.toLowerCase().includes(search);
+
+      const minor = conductRules.minor.filter(r => pick(r, 'minor'));
+      const serious = conductRules.serious.filter(r => pick(r, 'serious'));
+
+      const minorHtml = minor.length ? minor.map(rule => conductRuleCard(rule, 'minor')).join('') : '';
+      const seriousHtml = serious.length ? serious.map(rule => conductRuleCard(rule, 'serious')).join('') : '';
+
+      container.innerHTML = `
+        <div class="col-12">
+          <div class="small text-secondary mb-2">Click one offense to select it.</div>
+        </div>
+        ${minorHtml || seriousHtml ? '' : '<div class="col-12"><div class="empty-state">No matching conduct rule found.</div></div>'}
+        ${minorHtml ? `<div class="col-12"><h6 class="fw-bold text-primary mb-2">Minor offenses</h6></div>` : ''}
+        ${minorHtml}
+        ${seriousHtml ? `<div class="col-12"><h6 class="fw-bold text-danger mb-2">Serious offenses</h6></div>` : ''}
+        ${seriousHtml}
+      `;
+      syncSelectedConductUI();
+    }
+
+    function conductRuleCard(rule, type){
+      const selected = selectedConduct === rule;
+      const badge = type === 'minor' ? 'badge-soft' : 'badge-danger-soft';
+      return `
+        <div class="col-md-6">
+          <div class="rule-card ${selected ? 'border border-primary border-2' : ''}" data-pick-conduct="${escapeHtml(rule)}" style="cursor:pointer;">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+              <div>
+                <div class="badge ${badge} mb-2">${type}</div>
+                <div class="fw-semibold">${escapeHtml(rule)}</div>
+              </div>
+              ${selected ? '<i class="fa-solid fa-circle-check text-primary fs-5"></i>' : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function syncSelectedConductUI(){
+      document.querySelectorAll('[data-pick-conduct]').forEach(card => {
+        card.addEventListener('click', () => {
+          selectedConduct = card.dataset.pickConduct;
+          document.getElementById('selectedConduct').value = selectedConduct;
+          validateStep2();
+          renderConductList();
+        });
+      });
+    }
+
+    let currentStage = 1;
+    function syncWizard(){
+      document.getElementById('wizardStage1').classList.toggle('hidden', currentStage !== 1);
+      document.getElementById('wizardStage2').classList.toggle('hidden', currentStage !== 2);
+      document.getElementById('wizardStage3').classList.toggle('hidden', currentStage !== 3);
+
+      document.getElementById('wizStep1').classList.toggle('active', currentStage === 1);
+      document.getElementById('wizStep2').classList.toggle('active', currentStage === 2);
+      document.getElementById('wizStep3').classList.toggle('active', currentStage === 3);
+
+      document.getElementById('wizStep1').classList.toggle('done', currentStage > 1);
+      document.getElementById('wizStep2').classList.toggle('done', currentStage > 2);
+      document.getElementById('wizStep3').classList.toggle('done', currentStage > 3);
+    }
+
+    function validateStep1(){
+      const required = ['irDate','irTime','irLocation','irReporter','irReporterRole','irSection','irSummary'];
+      const valid = required.every(id => String(document.getElementById(id).value || '').trim().length > 0);
+      document.getElementById('toStep2Btn').disabled = !valid;
+      return valid;
+    }
+
+    function validateStep2(){
+      const ok = !!selectedConduct;
+      document.getElementById('toStep3Btn').disabled = !ok;
+      return ok;
+    }
+
+    function renderNotifications(){
+      const list = document.getElementById('notificationsList');
+      const items = db.notifications.filter(n => n.user === currentUser.username).sort((a,b) => b.createdAt.localeCompare(a.createdAt));
+      if(!items.length){
+        list.innerHTML = '<div class="empty-state">No notifications yet.</div>';
+        return;
+      }
+      list.innerHTML = items.map(n => `
+        <div class="notification-item ${n.read ? '' : 'unread'}">
+          <div class="d-flex justify-content-between align-items-start gap-3">
+            <div>
+              <div class="fw-bold mb-1">${escapeHtml(n.title)}</div>
+              <div class="text-secondary">${escapeHtml(n.message)}</div>
+            </div>
+            <div class="small text-secondary text-end">${formatDateTime(n.createdAt)}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function markAllRead(){
+      db.notifications.forEach(n => {
+        if(n.user === currentUser.username) n.read = true;
+      });
+      persist();
+      toast('Notifications updated', 'All visible notifications were marked as read.', 'success');
+    }
+
+    function persist(){
+      syncGoodMoralReadyState();
+      saveDB();
+      renderAll();
+    }
+
+    function getPendingCount(){
+      return db.incidentReports.filter(x => x.status === 'pending').length + db.goodMoralRequests.filter(x => x.status === 'pending' || x.status === 'waiting').length;
+    }
+
+    function renderKPIs(){
+      const visible = document.getElementById('kpiRow');
+      const totals = {
+        incidents: db.incidentReports.length,
+        goodmoral: db.goodMoralRequests.length,
+        pending: db.incidentReports.filter(x => x.status === 'pending').length + db.goodMoralRequests.filter(x => x.status === 'pending' || x.status === 'waiting').length,
+        ready: db.goodMoralRequests.filter(x => x.status === 'ready').length
+      };
+
+      visible.innerHTML = `
+        <div class="col-md-3"><div class="kpi"><div class="num text-primary">${totals.incidents}</div><div class="lbl">Incident reports</div></div></div>
+        <div class="col-md-3"><div class="kpi"><div class="num text-success">${totals.goodmoral}</div><div class="lbl">Good Moral requests</div></div></div>
+        <div class="col-md-3"><div class="kpi"><div class="num text-warning">${totals.pending}</div><div class="lbl">Pending / waiting</div></div></div>
+        <div class="col-md-3"><div class="kpi"><div class="num text-info">${totals.ready}</div><div class="lbl">Certificates ready</div></div></div>
+      `;
+
+      const rep = document.getElementById('reportsKpis');
+      rep.innerHTML = `
+        <div class="col-md-4"><div class="kpi"><div class="num text-primary">${totals.incidents}</div><div class="lbl">Total incident reports</div></div></div>
+        <div class="col-md-4"><div class="kpi"><div class="num text-success">${totals.goodmoral}</div><div class="lbl">Total Good Moral requests</div></div></div>
+        <div class="col-md-4"><div class="kpi"><div class="num text-warning">${totals.pending}</div><div class="lbl">Items pending review</div></div></div>
+      `;
+    }
+
+    function renderActivity(){
+      const feed = document.getElementById('activityFeed');
+      const recent = [
+        ...db.incidentReports.map(x => ({ type:'Incident Report', title:x.studentName || 'Anonymous', detail:x.summary || x.location, status:x.status, at:x.createdAt })),
+        ...db.goodMoralRequests.map(x => ({ type:'Good Moral', title:x.studentName, detail:x.purpose, status:x.status, at:x.createdAt }))
+      ].sort((a,b) => b.at.localeCompare(a.at)).slice(0, 6);
+
+      if(!recent.length){
+        feed.innerHTML = '<div class="col-12"><div class="empty-state">No submissions yet.</div></div>';
+        return;
+      }
+
+      feed.innerHTML = recent.map(item => `
+        <div class="col-md-6">
+          <div class="panel p-3 h-100">
+            <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+              <span class="badge ${item.type === 'Incident Report' ? 'badge-soft' : 'badge-success-soft'}">${escapeHtml(item.type)}</span>
+              <span class="badge ${statusBadge(item.status)}">${escapeHtml(statusLabel(item.status))}</span>
+            </div>
+            <h6 class="fw-bold mb-1">${escapeHtml(item.title)}</h6>
+            <div class="text-secondary small mb-2">${escapeHtml(item.detail || '—')}</div>
+            <div class="small text-secondary">${formatDateTime(item.at)}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderQueue(){
+      const body = document.getElementById('staffQueueBody');
+      if(!body) return;
+
+      const rows = [
+        ...db.incidentReports.map(r => ({ ...r, kind:'incident', kindLabel:'Incident Report', student:r.studentName || 'Anonymous', section:r.section || '—' })),
+        ...db.goodMoralRequests.map(r => ({ ...r, kind:'goodmoral', kindLabel:'Good Moral Request', student:r.studentName, section:r.section, readyAt:r.readyAt }))
+      ];
+
+      const filtered = rows.filter(r => currentFilter === 'all' ? true : r.kind === currentFilter).sort((a,b) => b.createdAt.localeCompare(a.createdAt));
+      if(!filtered.length){
+        body.innerHTML = '<tr><td colspan="6"><div class="empty-state">No submissions found.</div></td></tr>';
+        return;
+      }
+
+      body.innerHTML = filtered.map(r => `
+        <tr>
+          <td><span class="badge ${r.kind === 'incident' ? 'badge-soft' : 'badge-success-soft'}">${escapeHtml(r.kindLabel)}</span></td>
+          <td>${escapeHtml(r.student)}</td>
+          <td>${escapeHtml(r.section)}</td>
+          <td><span class="badge ${statusBadge(r.status)}">${escapeHtml(statusLabel(r.status))}</span></td>
+          <td>${formatDateTime(r.createdAt)}</td>
+          <td class="text-end action-col">
+            <button class="btn btn-sm btn-outline-primary soft-btn" data-review="${r.kind}|${r.id}"><i class="fa-regular fa-eye"></i></button>
+            ${r.kind === 'goodmoral' && r.status === 'ready' ? `<button class="btn btn-sm btn-outline-success soft-btn" data-print-cert="${r.id}"><i class="fa-solid fa-print"></i></button>` : ''}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderConductPage(){
+      const minor = document.getElementById('minorRules');
+      const serious = document.getElementById('seriousRules');
+      minor.innerHTML = conductRules.minor.map((x,i) => `<div class="d-flex gap-2 align-items-start mb-2"><span class="badge badge-soft">${i+1}</span><div>${escapeHtml(x)}</div></div>`).join('');
+      serious.innerHTML = conductRules.serious.map((x,i) => `<div class="d-flex gap-2 align-items-start mb-2"><span class="badge badge-danger-soft">${i+1}</span><div>${escapeHtml(x)}</div></div>`).join('');
+    }
+
+    function buildQrCode(id, text){
+      const node = document.getElementById(id);
+      node.innerHTML = '';
+      new QRCode(node, { text, width: 160, height: 160, correctLevel: QRCode.CorrectLevel.M });
+    }
+
+    function renderQrPage(){
+      const base = location.href.split('#')[0];
+      buildQrCode('incidentQr', `${base}#service=incident`);
+      buildQrCode('goodMoralQr', `${base}#service=goodmoral`);
+    }
+
+    function renderStatusChart(){
+      const ctx = document.getElementById('statusChart');
+      if(!ctx) return;
+      const labels = ['Pending', 'Waiting', 'Ready', 'Approved', 'Rejected', 'Resolved'];
+      const values = [
+        db.incidentReports.filter(x => x.status === 'pending').length + db.goodMoralRequests.filter(x => x.status === 'pending').length,
+        db.goodMoralRequests.filter(x => x.status === 'waiting').length,
+        db.goodMoralRequests.filter(x => x.status === 'ready').length,
+        db.incidentReports.filter(x => x.status === 'approved').length + db.goodMoralRequests.filter(x => x.status === 'approved').length,
+        db.incidentReports.filter(x => x.status === 'rejected').length + db.goodMoralRequests.filter(x => x.status === 'rejected').length,
+        db.incidentReports.filter(x => x.status === 'resolved').length
+      ];
+      if(chart) chart.destroy();
+      chart = new Chart(ctx, {
+        type:'doughnut',
+        data:{ labels, datasets:[{ data: values }] },
+        options:{ responsive:true, plugins:{ legend:{ position:'bottom' } } }
+      });
+      const snap = document.getElementById('queueSnapshot');
+      snap.innerHTML = labels.map((l, i) => `
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span>${escapeHtml(l)}</span>
+          <strong>${values[i]}</strong>
+        </div>
+      `).join('') || '<div class="empty-state">No data yet.</div>';
+    }
+
+    function renderReviewModal(item){
+      currentReview = item;
+      const body = document.getElementById('reviewBody');
+      const isGoodMoral = item.kind === 'goodmoral';
+      document.getElementById('goodMoralReviewOptions').classList.toggle('hidden', !isGoodMoral);
+
+      body.innerHTML = `
+        <div class="panel p-3 mb-3">
+          <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+            <span class="badge ${item.kind === 'incident' ? 'badge-soft' : 'badge-success-soft'}">${escapeHtml(item.kindLabel)}</span>
+            <span class="badge ${statusBadge(item.status)}">${escapeHtml(statusLabel(item.status))}</span>
+          </div>
+          <div class="row g-2">
+            <div class="col-md-6"><strong>Student:</strong> ${escapeHtml(item.student || 'Anonymous')}</div>
+            <div class="col-md-6"><strong>Section:</strong> ${escapeHtml(item.section || '—')}</div>
+            <div class="col-12"><strong>Submitted:</strong> ${formatDateTime(item.createdAt)}</div>
+            ${item.kind === 'incident' ? `
+              <div class="col-12"><strong>Summary:</strong> ${escapeHtml(item.summary || '—')}</div>
+              <div class="col-12"><strong>Conduct rule:</strong> ${escapeHtml(item.conductRule || '—')}</div>
+              <div class="col-12"><strong>Immediate action:</strong> ${escapeHtml(item.immediateAction || '—')}</div>
+            ` : `
+              <div class="col-12"><strong>Purpose:</strong> ${escapeHtml(item.purpose || '—')}</div>
+              <div class="col-12"><strong>Notes:</strong> ${escapeHtml(item.notes || '—')}</div>
+              <div class="col-12"><strong>Ready at:</strong> ${formatDateTime(item.readyAt || '')}</div>
+            `}
+          </div>
+        </div>
+      `;
+      document.getElementById('reviewNotes').value = item.staffNotes || '';
+      openModal('reviewModal').show();
+    }
+
+    function reviewItem(kind, id){
+      const arr = kind === 'incident' ? db.incidentReports : db.goodMoralRequests;
+      const item = arr.find(x => x.id === id);
+      if(!item) return;
+      renderReviewModal({ ...item, kind, kindLabel: kind === 'incident' ? 'Incident Report' : 'Good Moral Request', student:item.studentName || 'Anonymous', section:item.section || '—' });
+    }
+
+    function setReviewResult(mode){
+      if(!currentReview) return;
+      const arr = currentReview.kind === 'incident' ? db.incidentReports : db.goodMoralRequests;
+      const item = arr.find(x => x.id === currentReview.id);
+      if(!item) return;
+      const notes = document.getElementById('reviewNotes').value.trim();
+      item.staffNotes = notes;
+
+      if(mode === 'reject'){
+        item.status = 'rejected';
+        notify(item.studentUser, 'Request rejected', `${currentReview.kindLabel} was rejected. Review the staff notes.`);
+        addAudit('Rejected', `${currentReview.kindLabel} ${item.id} rejected.`);
+      } else {
+        if(currentReview.kind === 'incident'){
+          item.status = 'reviewed';
+          notify(item.studentUser, 'Incident reviewed', 'Your incident report has been reviewed by staff.');
+          addAudit('Incident reviewed', `${item.id} was reviewed.`);
+        } else {
+          const timing = document.querySelector('input[name="gmTiming"]:checked')?.value || '0';
+          const customDays = Number(document.getElementById('gmCustomDays').value || '2');
+          const days = timing === 'custom' ? Math.max(0, customDays) : Number(timing);
+          const delayDays = Number.isFinite(days) ? days : 2;
+          if(delayDays === 0){
+            item.status = 'ready';
+            item.readyAt = new Date().toISOString();
+            notify(item.studentUser, 'Good Moral approved', 'Your certificate is ready for printing now.');
+          }else{
+            item.status = 'waiting';
+            item.readyAt = new Date(Date.now() + delayDays * 24 * 60 * 60 * 1000).toISOString();
+            notify(item.studentUser, 'Good Moral pending', `Your request is approved. Please wait ${delayDays} day(s) before printing the certificate.`);
+          }
+          addAudit('Good Moral approved', `${item.id} approved with a waiting period of ${delayDays} day(s).`);
+        }
+      }
+
+      persist();
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('reviewModal')).hide();
+      toast('Updated', `${currentReview.kindLabel} saved successfully.`, mode === 'reject' ? 'warning' : 'success');
+    }
+
+    function buildCertificate(item){
+      return `
+        <div class="certificate-card">
+          <div class="text-uppercase fw-bold text-primary mb-2">Republic of the Philippines</div>
+          <div class="fw-semibold">Department of Education</div>
+          <div class="small mb-3">Learner Formation Office</div>
+          <h1 class="display-6 mb-3">GOOD MORAL CERTIFICATE</h1>
+          <p>This is to certify that <strong>${escapeHtml(item.studentName)}</strong>, LRN <strong>${escapeHtml(item.lrn)}</strong>, from <strong>${escapeHtml(item.section)}</strong>, has requested a Good Moral Certificate for <strong>${escapeHtml(item.purpose)}</strong>.</p>
+          <p class="mb-4">The request has been approved and is ready for printing. Issued on <strong>${formatDateTime(item.readyAt || item.createdAt)}</strong>.</p>
+          <div class="row mt-5">
+            <div class="col-md-6 text-start">
+              <div class="certificate-sign">
+                Guidance Counselor / Designate
+              </div>
+            </div>
+            <div class="col-md-6 text-end">
+              <div class="certificate-sign ms-auto">
+                Adviser / Department Head
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function printCertificateById(id){
+      const item = db.goodMoralRequests.find(x => x.id === id);
+      if(!item || item.status !== 'ready'){
+        toast('Unavailable', 'This certificate is not ready for printing yet.', 'warning');
+        return;
+      }
+      document.getElementById('certificatePreview').innerHTML = buildCertificate(item);
+      openModal('certificateModal').show();
+      document.getElementById('printCertificateBtn').onclick = () => {
+        document.getElementById('printArea').innerHTML = buildCertificate(item);
+        window.print();
+      };
+    }
+
+    function submitGoodMoral(e){
+      e.preventDefault();
+      const req = {
+        id: uid(),
+        studentUser: currentUser.username,
+        studentName: document.getElementById('gmName').value.trim(),
+        lrn: document.getElementById('gmLrn').value.trim(),
+        section: document.getElementById('gmSection').value.trim(),
+        purpose: document.getElementById('gmPurpose').value.trim(),
+        notes: document.getElementById('gmNotes').value.trim(),
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+        readyAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+        staffNotes: ''
+      };
+      db.goodMoralRequests.unshift(req);
+      notify(currentUser.username, 'Good Moral request submitted', 'Your request was received. You will wait 2 days unless approved earlier.');
+      ['teacher01','counselor01','principal01','admin01'].forEach(u => notify(u, 'New Good Moral request', `${req.studentName} submitted a Good Moral request.`));
+      addAudit('Good Moral submitted', `${req.studentName} submitted a request.`);
+      saveDB();
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('goodMoralModal')).hide();
+      e.target.reset();
+      syncGoodMoralReadyState();
+      renderAll();
+      toast('Request submitted', 'Please wait 2 days unless a department head approves it earlier.', 'success');
+    }
+
+    function submitIncident(e){
+      e.preventDefault();
+      if(!validateStep1() || !validateStep2()){
+        toast('Missing required fields', 'Please complete all required fields before submitting.', 'warning');
+        return;
+      }
+      const types = [...document.querySelectorAll('.incident-type:checked')].map(x => x.value);
+      const report = {
+        id: uid(),
+        studentUser: currentUser.username,
+        studentName: document.getElementById('irStudentName').value.trim() || 'Anonymous',
+        section: document.getElementById('irSection').value.trim(),
+        date: document.getElementById('irDate').value,
+        time: document.getElementById('irTime').value,
+        location: document.getElementById('irLocation').value.trim(),
+        reporter: document.getElementById('irReporter').value.trim(),
+        reporterRole: document.getElementById('irReporterRole').value,
+        incidentTypes: types.length ? types : ['Other'],
+        summary: document.getElementById('irSummary').value.trim(),
+        conductRule: selectedConduct,
+        guardianNotified: document.getElementById('irGuardianNotified').value,
+        witness: document.getElementById('irWitness').value.trim(),
+        immediateAction: document.getElementById('irImmediateAction').value.trim(),
+        actionBy: document.getElementById('irActionBy').value.trim(),
+        actionNotes: document.getElementById('irActionNotes').value.trim(),
+        docs: document.getElementById('irDocs').value.trim(),
+        caseNo: document.getElementById('lfoCaseNo').value.trim(),
+        lfoDate: document.getElementById('lfoDate').value,
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+        staffNotes: ''
+      };
+      db.incidentReports.unshift(report);
+      ['teacher01','counselor01','principal01','admin01'].forEach(u => notify(u, 'New incident report', `${report.studentName} submitted an incident report.`));
+      notify(currentUser.username, 'Incident report submitted', 'Your report has been received and will be reviewed.');
+      addAudit('Incident submitted', `${report.id} submitted for review.`);
+      saveDB();
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('incidentWizard')).hide();
+      e.target.reset();
+      selectedConduct = '';
+      renderAll();
+      toast('Incident submitted', 'The report has been saved successfully.', 'success');
+    }
+
+    function openFromHash(){
+      const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
+      const service = hash.get('service');
+      if(currentUser?.role === 'student' && service === 'incident') openIncidentWizard();
+      if(currentUser?.role === 'student' && service === 'goodmoral') openGoodMoralModal();
+    }
+
+    function renderAll(){
+      syncGoodMoralReadyState();
+      if(!currentUser) return;
+      renderKPIs();
+      renderActivity();
+      renderNotifications();
+      renderConductPage();
+      renderQrPage();
+      renderStatusChart();
+      renderQueue();
+      const pending = getPendingCount();
+      document.getElementById('liveQueueChip').textContent = `${pending} pending`;
+      const myNotifs = db.notifications.filter(n => n.user === currentUser.username && !n.read).length;
+      document.getElementById('markAllReadBtn').innerHTML = `<i class="fa-regular fa-bell me-1"></i>Mark all read${myNotifs ? ` (${myNotifs})` : ''}`;
+    }
+
+    function refreshCurrent(){
+      syncGoodMoralReadyState();
+      renderAll();
+      if(currentPage === 'staffPage') renderQueue();
+      if(currentPage === 'reportsPage') renderStatusChart();
+    }
+
+    // Events
+    document.getElementById('loginForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const username = document.getElementById('loginUsername').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const user = users.find(u => u.username === username && u.password === password);
+      if(!user){
+        toast('Login failed', 'Check your username and password.', 'danger');
+        return;
+      }
+      login(user);
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+    document.getElementById('markAllReadBtn').addEventListener('click', () => {
+      db.notifications.forEach(n => { if(n.user === currentUser.username) n.read = true; });
+      saveDB();
+      renderAll();
+      toast('Done', 'All notifications were marked as read.', 'success');
+    });
+
+    document.addEventListener('click', e => {
+      const page = e.target.closest('[data-page]');
+      if(page){ showPage(page.dataset.page); }
+      const jump = e.target.closest('[data-jump]');
+      if(jump){ showPage(jump.dataset.jump); }
+      const back = e.target.closest('[data-back]');
+      if(back){ showPage(back.dataset.back); }
+      const open = e.target.closest('[data-open]');
+      if(open){
+        if(open.dataset.open === 'goodMoralForm') openGoodMoralModal();
+        if(open.dataset.open === 'incidentWizard') openIncidentWizard();
+      }
+      const filter = e.target.closest('[data-staff-filter]');
+      if(filter){
+        currentFilter = filter.dataset.staffFilter;
+        document.querySelectorAll('[data-staff-filter]').forEach(btn => btn.classList.toggle('active', btn.dataset.staffFilter === currentFilter));
+        renderQueue();
+      }
+      const review = e.target.closest('[data-review]');
+      if(review){
+        const [kind, id] = review.dataset.review.split('|');
+        reviewItem(kind, id);
+      }
+      const cert = e.target.closest('[data-print-cert]');
+      if(cert){
+        printCertificateById(cert.dataset.printCert);
+      }
+      const copy = e.target.closest('[data-copy-link]');
+      if(copy){
+        const base = location.href.split('#')[0];
+        const link = `${base}#service=${copy.dataset.copyLink}`;
+        navigator.clipboard.writeText(link).then(() => toast('Copied', 'Link copied to clipboard.', 'success'));
+      }
+      const conductCard = e.target.closest('[data-pick-conduct]');
+      if(conductCard){
+        selectedConduct = conductCard.dataset.pickConduct;
+        document.getElementById('selectedConduct').value = selectedConduct;
+        validateStep2();
+        renderConductList();
+      }
+    });
+
+    document.getElementById('goodMoralForm').addEventListener('submit', submitGoodMoral);
+    document.getElementById('incidentForm').addEventListener('submit', submitIncident);
+    document.getElementById('toStep2Btn').addEventListener('click', () => {
+      if(validateStep1()){
+        currentStage = 2;
+        syncWizard();
+        renderConductList();
+        validateStep2();
+      }
+    });
+    document.getElementById('backStep1Btn').addEventListener('click', () => {
+      currentStage = 1;
+      syncWizard();
+      validateStep1();
+    });
+    document.getElementById('toStep3Btn').addEventListener('click', () => {
+      if(validateStep2()){
+        currentStage = 3;
+        syncWizard();
+      }
+    });
+    document.getElementById('backStep2Btn').addEventListener('click', () => {
+      currentStage = 2;
+      syncWizard();
+      validateStep2();
+    });
+    ['irDate','irTime','irLocation','irReporter','irReporterRole','irSection','irSummary'].forEach(id => {
+      document.addEventListener('input', ev => {
+        if(ev.target && ev.target.id === id) validateStep1();
+      });
+      document.addEventListener('change', ev => {
+        if(ev.target && ev.target.id === id) validateStep1();
+      });
+    });
+    document.getElementById('conductSearch').addEventListener('input', renderConductList);
+    document.getElementById('conductCategory').addEventListener('change', renderConductList);
+    document.getElementById('previewConductBtn').addEventListener('click', () => {
+      if(selectedConduct) toast('Selected offense', selectedConduct, 'info');
+      else toast('No offense selected', 'Please select a conduct rule first.', 'warning');
+    });
+    document.getElementById('approveBtn').addEventListener('click', () => setReviewResult('approve'));
+    document.getElementById('rejectBtn').addEventListener('click', () => setReviewResult('reject'));
+
+    const session = getSession();
+    seedStudentRecord();
+    syncGoodMoralReadyState();
+    saveDB();
+
+    if(session){
+      currentUser = session;
+      document.getElementById('loginView').classList.add('hidden');
+      document.getElementById('appView').classList.remove('hidden');
+      document.getElementById('userBadge').textContent = `${session.name} · ${roleTitles[session.role]}`;
+      buildNav();
+      showPage('dashboardPage');
+    }else{
+      document.getElementById('appView').classList.add('hidden');
+    }
+
+    function setReviewResult(mode){
+      if(!currentReview) return;
+      const reviewLabel = currentReview.kindLabel;
+      const arr = currentReview.kind === 'incident' ? db.incidentReports : db.goodMoralRequests;
+      const item = arr.find(x => x.id === currentReview.id);
+      if(!item) return;
+      const notes = document.getElementById('reviewNotes').value.trim();
+      item.staffNotes = notes;
+
+      if(mode === 'reject'){
+        item.status = 'rejected';
+        notify(item.studentUser, 'Submission rejected', `${reviewLabel} was rejected.`);
+        addAudit('Rejected', `${reviewLabel} ${item.id} rejected.`);
+      }else if(currentReview.kind === 'incident'){
+        item.status = 'reviewed';
+        notify(item.studentUser, 'Incident reviewed', 'Your incident report has been reviewed by staff.');
+        addAudit('Incident reviewed', `${item.id} reviewed.`);
+      }else{
+        const timing = document.querySelector('input[name="gmTiming"]:checked')?.value || '2';
+        const custom = Number(document.getElementById('gmCustomDays').value || 2);
+        const days = timing === 'custom' ? Math.max(0, custom) : Number(timing);
+        if(days === 0){
+          item.status = 'ready';
+          item.readyAt = new Date().toISOString();
+          notify(item.studentUser, 'Good Moral ready', 'Your certificate is ready for printing now.');
+        }else{
+          item.status = 'waiting';
+          item.readyAt = new Date(Date.now() + days * 86400000).toISOString();
+          notify(item.studentUser, 'Good Moral approved', `Please wait ${days} day(s) before printing your certificate.`);
+        }
+        addAudit('Good Moral updated', `${item.id} set to ${item.status}.`);
+      }
+
+      saveDB();
+      openModal('reviewModal').hide();
+      currentReview = null;
+      renderAll();
+      toast('Saved', `${reviewLabel} updated successfully.`, mode === 'reject' ? 'warning' : 'success');
+    }
+
+    function attachDynamicEvents(){
+      document.querySelectorAll('[data-pick-conduct]').forEach(el => {
+        el.addEventListener('click', () => {
+          selectedConduct = el.dataset.pickConduct;
+          document.getElementById('selectedConduct').value = selectedConduct;
+          validateStep2();
+          renderConductList();
+        });
+      });
+    }
+
+    // Keep QR and queue up to date with hash routes
+    window.addEventListener('hashchange', openFromHash);
+    window.addEventListener('load', () => {
+      if(currentUser){
+        showPage('dashboardPage');
+      }
+      renderAll();
+      openFromHash();
+    });
+
+    // Initial setup for login page default content
+    renderConductPage();
+    renderIncidentChecks();
+    syncWizard();
+  </script>
+  
+</body>
+</html>
